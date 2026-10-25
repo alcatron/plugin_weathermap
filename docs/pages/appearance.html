@@ -35,8 +35,12 @@
         notes and via points use coordinates within this canvas.</p>
         <p>Map Properties also holds the default IN/OUT link bandwidth for this map. New
         links inherit that capacity. Default link width is in Map Style. The initial capacity is 1000M in both directions; 1G means
-        the same thing with the default KILO 1000. An existing link with its own capacity keeps
-        that value when you change the defaults.</p>
+        the same thing with the default KILO 1000.</p>
+        <p><strong>Check existing links after changing the default capacity.</strong> The current
+        editor replaces both directions on a link when either direction matches its previous map
+        default. For example, changing 1000M/1000M defaults to 2000M/2000M can also change a
+        1000M/200M link to 2000M/2000M. Record asymmetric capacities first, then reopen those links
+        and restore the intended values after saving the defaults.</p>
         <div class="table-scroll">
           <table>
             <thead>

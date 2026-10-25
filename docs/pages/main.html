@@ -112,7 +112,9 @@
         <p><code>BANDWIDTH</code> is capacity in bits per second. With the default <code>KILO
         1000</code>, <code>1G</code> equals <code>1000M</code>. K, M, G and T are supported. If a
         custom map changes KILO, the conversion changes too. New implicit link capacities are 1000M
-        in each direction; explicitly configured values are preserved.</p>
+        in each direction; loading a map retains explicitly configured capacities. Changing defaults
+        through Map Properties is a separate operation: see the
+        <a href="appearance.html#properties">capacity-editing limitation</a> before doing so.</p>
         <p>A 200M reading on a 1G link is 20%. Adding a CPU preview does not change that reading.
         Adding another measured traffic source does; see <a href="editor.html#combining">combining
         sources</a>.</p>
