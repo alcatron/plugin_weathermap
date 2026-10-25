@@ -240,6 +240,12 @@ function wm_comment_update_default($map, $field, $new) {
 	if ($new === null) {
 		return;
 	}
+	// New layout controls follow templates; retain established font/colour behaviour.
+	if (in_array($field, ['commentstyle', 'width'], true)) {
+		$marker = $field === 'commentstyle' ? 'editor_commentstyle_override' : null;
+		wm_link_propagate_defaults($map, [$field => $new], $marker);
+		return;
+	}
 	$old = $map->links['DEFAULT']->$field;
 
 	if ($new == $old) {
@@ -251,15 +257,43 @@ function wm_comment_update_default($map, $field, $new) {
 			continue;
 		}
 
-		if ($name !== 'DEFAULT' && $field === 'commentstyle' && !empty($link->hints['editor_commentstyle_override'])) {
-			continue;
-		}
-
 		if ($old == $link->$field) {
 			$link->$field = $new;
 		}
 	}
 }
+/**
+ * Follow changed template relationships, comparing values before any mutation.
+ * Included templates and explicit overrides stop propagation down their branch.
+ */
+function wm_link_propagate_defaults($map, $values, $marker = null) {
+	$previous = [];
+	$children = [];
+	foreach ($map->links as $name => $link) {
+		$children[$link->template ?? 'DEFAULT'][] = $name;
+		foreach ($values as $field => $value) {
+			$previous[$name][$field] = $link->$field;
+		}
+	}
+	if ($previous['DEFAULT'] == $values) return;
+
+	$pending = ['DEFAULT'];
+	$changed = ['DEFAULT' => true];
+	for ($i = 0; $i < count($pending); $i++) {
+		$parent = $pending[$i];
+		foreach ($values as $field => $value) {
+			$map->links[$parent]->$field = $value;
+		}
+		foreach ($children[$parent] ?? [] as $name) {
+			$link = $map->links[$name];
+			$inherits = $previous[$name] == $previous[$parent] && ($marker === null || empty($link->hints[$marker]));
+			if (isset($changed[$name]) || $name === ':: DEFAULT ::' || $link->defined_in !== $map->configfile || !$inherits) continue;
+			$changed[$name] = true;
+			$pending[] = $name;
+		}
+	}
+}
+
 /**
  * Apply validated link comment style defaults.
  *
@@ -318,15 +352,7 @@ function wm_link_valid_position($value) {
 /** Update matching root defaults as a pair, preserving custom or included links. */
 function wm_link_apply_default_positions($map, $in, $out) {
 	if (!wm_link_valid_position($in) || !wm_link_valid_position($out)) return;
-	$oldIn = $map->links['DEFAULT']->labeloffset_in;
-	$oldOut = $map->links['DEFAULT']->labeloffset_out;
-	foreach ($map->links as $name => $link) {
-		if ($name === ':: DEFAULT ::' || ($name !== 'DEFAULT' && ($link->defined_in !== $map->configfile || !empty($link->hints['editor_labelpos_override'])))) continue;
-		if ($link->labeloffset_in == $oldIn && $link->labeloffset_out == $oldOut) {
-			$link->labeloffset_in = (int)$in;
-			$link->labeloffset_out = (int)$out;
-		}
-	}
+	wm_link_propagate_defaults($map, ['labeloffset_in' => (int)$in, 'labeloffset_out' => (int)$out], 'editor_labelpos_override');
 }
 
 /** Apply validated per-link overrides, or restore the inherited template values. */

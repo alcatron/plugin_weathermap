@@ -307,6 +307,8 @@ class WeatherMapLink extends WeatherMapItem {
 				$this->$fld = $source->$fld;
 			}
 		}
+		// These describe this link's explicit editor choices, not inherited settings.
+		unset($this->hints['editor_commentstyle_override'], $this->hints['editor_labelpos_override']);
 	}
 
 	/**
@@ -1107,7 +1109,7 @@ class WeatherMapLink extends WeatherMapItem {
 			foreach ($this->hints as $hintname=>$hint) {
 				// all hints for DEFAULT node are for writing
 				// only changed ones, or unique ones, otherwise
-				if (($this->name == 'DEFAULT') || (isset($dd->hints[$hintname]) && $dd->hints[$hintname] != $hint) || (!isset($dd->hints[$hintname]))) {
+				if (in_array($hintname, ['editor_commentstyle_override', 'editor_labelpos_override'], true) || ($this->name == 'DEFAULT') || (isset($dd->hints[$hintname]) && $dd->hints[$hintname] != $hint) || (!isset($dd->hints[$hintname]))) {
 					$output .= TAB . "SET $hintname $hint" . EOL;
 				}
 			}
